@@ -3,31 +3,21 @@
 import requests
 import json
 from pprint import pprint
+from flight_search import FlightSearch
+from data_manager import DataManager
+from copy import deepcopy
+from flight_search import FlightSearch
 
-sheet_data_get_url = r'https://api.sheety.co/bb7b4db22c7482feb06a54c51f8e5bf2/flightDeals/prices'
-
-
-def get_sheet_data():
-    response = requests.get(sheet_data_get_url)
-    sheet_data = response.json()
-    return sheet_data
+flight_search = FlightSearch()
 
 
-def check_if_field_empty(table, column):
-    for row in sheet_data:
-        if row.get(column) == '':
-            continue
-        else:
-            return False
-    return True
+data_manager = DataManager()
+sheet_data = data_manager.get_destination_data()
 
-
-with open('flight-deals-prices.json', 'r') as f:
-    data = json.load(f)
-
-sheet_data = data.get('prices')
-
-is_iatacode_empty = check_if_field_empty(sheet_data, 'iataCode')
-print(is_iatacode_empty)
-
-# check if iataCode column is empth
+for index, row in enumerate(sheet_data):
+    if row.get('iataCode') == '':
+        iata_code = flight_search.get_iata_code(
+            row.get('city'))
+        data_manager.destination_data[index]['iataCode'] = iata_code
+        data_manager.update_destination_code(
+            row_id=row.get('id'), destination_code=iata_code)
