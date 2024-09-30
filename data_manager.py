@@ -13,7 +13,7 @@ SHEETY_PRICES_ENDPOINT = 'https://api.sheety.co/bb7b4db22c7482feb06a54c51f8e5bf2
 
 class DataManager:
     # This class is responsible for talking to the Google Sheet.
-    def __init__(self) -> None:
+    def __init__(self):
         self.sheet_data_url = SHEETY_PRICES_ENDPOINT
         self._authorization = os.getenv('Authorization')
         self.headers = {
