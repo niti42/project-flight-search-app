@@ -1,4 +1,3 @@
-# This file will need to use the DataManager,FlightSearch, FlightData, NotificationManager classes to achieve the program requirements.
 from pprint import pprint
 from flight_data import FlightData
 from flight_search import FlightSearch
@@ -6,6 +5,11 @@ from data_manager import DataManager
 from copy import deepcopy
 from flight_search import FlightSearch
 from datetime import datetime, timedelta
+import time
+import asyncio
+
+from notifications import send_email, send_telegram_message
+
 MONTHS = 6
 
 
@@ -32,35 +36,55 @@ today_date = timestamp_today.strftime("%Y-%m-%d")
 
 for row in sheet_data:
     city = row.get('city')
-
     prices_60d = []
-    for idx, day in enumerate(range(MONTHS*30)):
+    for idx, day in enumerate(range(5)):
         future_day = timestamp_today + timedelta(day)
-        future_day = future_day.strftime("%Y-%m-%d")
-        return_day = future_day + timedelta(5)
-        all_flights = flight_search.get_all_flights(
-            origin_loc_code="LON",
-            destination_loc_code=row.get('iataCode'),
-            departure_date=future_day,
-            return_date=return_day,
-        )
+        future_day_str = future_day.strftime("%Y-%m-%d")
+        return_day = future_day + timedelta(1)
+        return_day_str = return_day.strftime("%Y-%m-%d")
+        try:
+            all_flights = flight_search.get_all_flights(
+                origin_loc_code="LON",
+                destination_loc_code=row.get('iataCode'),
+                departure_date=future_day_str,
+                return_date=return_day_str,
+            )
 
-        # print(f"Getting flights for {city}...")
-        flight_data.find_cheapest_flight(all_flights)
-        # print(f"{city}:{flight_data.price}")
-        prices_60d.append((idx, flight_data.price, flight_data))
+            # print(f"Getting flights for {city}...")
+            flight_data.find_cheapest_flight(all_flights)
+            # print(f"{city}:{flight_data.price}")
+            prices_60d.append((idx, flight_data.price, flight_data))
+        except Exception as e:
+            print(f"Error Fetching data: {e}")
+            continue
 
+    time.sleep(2)
+    prices_60d.sort(key=lambda x: x[1])
 
-# search for the flight prices from London (LON) to all the destinations in the Google Sheet.
-# looking only for non stop flights that leave anytime between tomorrow and in 6 months (6x30days) time
-# round trips for 1 adult. currency of the price we get back should be in GBP.
+    historical_low = row.get('lowestPrice')
 
+    if prices_60d[0][1] < historical_low:
+        print("60d lowest: ", prices_60d[0][1],
+              ',', "Prev Lowest", historical_low)
 
-# understand the problem
-# the script should check for prices once every day.
-# assume 1 week roundtrip duration (5 days)
-# For a given day do this:
+        price = prices_60d[0][2].price
+        departure_iata = prices_60d[0][2].origin_airport
+        arrival_iata = prices_60d[0][2].destination_airport
+        outbound_date = prices_60d[0][2].out_date
+        inbound_date = prices_60d[0][2].return_date
 
-# get prices for the destination for the next 60 days
-# Find if price for any day is lower than the historical low price listed in the table for the respective country
-# If you do get a flight meeting the prev cond. then get its details
+        message = f"""
+Only £{price} to fly from {departure_iata} to {arrival_iata} 
+on {outbound_date} until {inbound_date}"""
+
+        print(message)
+
+        # send_email(subject="Low Price alert!",
+        #            message=message,
+        #            to_email='nithishkr136@yahoo.com')
+
+        # Send telegram notification
+        asyncio.run(send_telegram_message(message))
+
+    else:
+        print(f"No Cheapest flight found for {city}")

@@ -49,11 +49,6 @@ class DataManager:
 
 
 if __name__ == "__main__":
-    row_edit = {"price": {"city": "Frankfurt",
-                          "iataCode": "TESTING", "lowestPrice": 42, "id": 3}}
-
-    row_num = 3
-    update_url = f'https://api.sheety.co/bb7b4db22c7482feb06a54c51f8e5bf2/flightDeals/prices/{row_num}'
-
-    response = requests.put(url=update_url, json=row_edit)
-    print(response)
+    dm = DataManager()
+    dm.get_destination_data()
+    print(dm.destination_data)
