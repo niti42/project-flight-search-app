@@ -2,13 +2,26 @@ from pprint import pprint
 from flight_data import FlightData
 from flight_search import FlightSearch
 from data_manager import DataManager
-from copy import deepcopy
 from flight_search import FlightSearch
 from datetime import datetime, timedelta
 import time
 import asyncio
 
+from notification_manager import NotificationManager
 from notifications import send_email, send_telegram_message
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+
+TGRAM_BOT_TOKEN = os.getenv('flight_deal_finder_bot_token')
+TGRAM_BOT_USERNAME = os.getenv('flight_deal_finder_bot_user_name')
+CHAT_ID = os.getenv('flight_deal_finder_bot_chat_id')
+
+my_email = os.getenv("my_email")
+password = os.getenv("password")
 
 MONTHS = 6
 
@@ -26,6 +39,8 @@ def update_iata_code_in_sheet(sheet_data):
 flight_search = FlightSearch()
 data_manager = DataManager()
 flight_data = FlightData()
+notification_manager = NotificationManager(
+    telegram_token=TGRAM_BOT_TOKEN, telegram_chat_id=CHAT_ID, email_address=my_email, email_password=password)
 
 
 sheet_data = data_manager.get_destination_data()
@@ -78,13 +93,15 @@ Only £{price} to fly from {departure_iata} to {arrival_iata}
 on {outbound_date} until {inbound_date}"""
 
         print(message)
+        asyncio.run(notification_manager.send_telegram_message(message))
+        notification_manager.send_email(
+            subject="Low Price alert!", message=message, to_email='nithishkr136@yahoo.com')
 
         # send_email(subject="Low Price alert!",
         #            message=message,
         #            to_email='nithishkr136@yahoo.com')
 
         # Send telegram notification
-        asyncio.run(send_telegram_message(message))
-
+        # asyncio.run(send_telegram_message(message))
     else:
         print(f"No Cheapest flight found for {city}")
