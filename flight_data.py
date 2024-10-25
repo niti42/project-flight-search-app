@@ -11,6 +11,8 @@ class FlightData:
         self.destination_airport = destination_airport
         self.out_date = out_date
         self.return_date = return_date
+        self.num_stops = 0
+        self.stops = []
 
     def find_cheapest_flight(self, all_flights):
         if all_flights_data := all_flights.get('data'):
@@ -18,11 +20,14 @@ class FlightData:
                 (idx, float(trip.get('price').get('total')))
                 for idx, trip in enumerate(all_flights_data)
             ]
+            # sort the tuple in ascending order. first val is the lowest price trip
             all_trips.sort(key=lambda x: x[1])
 
+            # get the index of the lowest price data in all_flights data
             lowest_price_idx = all_trips[0][0]
             lowest_price = all_trips[0][1]
 
+            # selects the trip with lowest price
             lowest_price_trip = all_flights_data[lowest_price_idx]
 
             self.price = lowest_price
@@ -33,3 +38,7 @@ class FlightData:
                 0].get('departure').get('at')
             self.return_date = lowest_price_trip.get('itineraries')[1].get('segments')[
                 0].get('departure').get('at')
+            self.num_stops = len(lowest_price_trip.get(
+                "itineraries")[0].get("segments"))
+            self.stops = [s.get("arrival").get("iataCode") for s in lowest_price_trip.get(
+                "itineraries")[0].get("segments")]
