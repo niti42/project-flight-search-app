@@ -1,4 +1,3 @@
-from pprint import pprint
 from flight_data import FlightData
 from flight_search import FlightSearch
 from data_manager import DataManager
@@ -14,8 +13,10 @@ from notifications import send_email, send_telegram_message
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
 
+load_dotenv()
+# Initialize the event loop at the start
+loop = asyncio.get_event_loop()
 
 TGRAM_BOT_TOKEN = os.getenv('flight_deal_finder_bot_token')
 TGRAM_BOT_USERNAME = os.getenv('flight_deal_finder_bot_user_name')
@@ -72,6 +73,8 @@ notification_manager = NotificationManager(
 
 sheet_data = data_manager.get_destination_data()
 update_iata_code_in_sheet(sheet_data)
+customer_data = data_manager.get_customer_emails()
+customer_emails = [c.get('whatIsYourEmail?') for c in customer_data]
 
 timestamp_today = datetime.now()
 today_date = timestamp_today.strftime("%Y-%m-%d")
@@ -96,8 +99,6 @@ for row in sheet_data:
     historical_low = float(row.get('lowestPrice', 'inf'))
 
     if prices_60d[0][1] < historical_low:
-        print("60d lowest: ", prices_60d[0][1],
-              ',', "Prev Lowest", historical_low)
 
         stops = prices_60d[0][2].stops
         price = prices_60d[0][2].price
@@ -114,9 +115,17 @@ Only £{price} to fly from {departure_iata} to {arrival_iata}
 on {outbound_date} until {inbound_date}, stops: {",".join(stops)}"""
 
         print(message)
-        asyncio.run(notification_manager.send_telegram_message(message))
-        notification_manager.send_email(
-            subject="Low Price alert!", message=message, to_email='nithishkr136@yahoo.com'
-        )
+        print('\n')
+
+        # uncomment if you want to send telegram messages
+        # print(message)
+        # loop.run_until_complete(
+        #     notification_manager.send_telegram_message(message))
+
+        # for email in customer_emails:
+        #     notification_manager.send_email(
+        #         subject="Low Price alert!", message=message, to_email=email
+        #     )
     else:
         print(f"No Cheapest flight found for {city}")
+loop.close()

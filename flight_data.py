@@ -33,7 +33,7 @@ class FlightData:
             self.price = lowest_price
             self.origin_airport = lowest_price_trip.get('source')
             self.destination_airport = lowest_price_trip.get('itineraries')[0].get('segments')[
-                0].get('arrival').get('iataCode')
+                -1].get('arrival').get('iataCode')
             self.out_date = lowest_price_trip.get('itineraries')[0].get('segments')[
                 0].get('departure').get('at')
             self.return_date = lowest_price_trip.get('itineraries')[1].get('segments')[

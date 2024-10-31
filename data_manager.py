@@ -9,17 +9,20 @@ load_dotenv()
 
 
 SHEETY_PRICES_ENDPOINT = 'https://api.sheety.co/bb7b4db22c7482feb06a54c51f8e5bf2/flightDeals/prices'
+SHEETY_USERS_ENDPOINT = 'https://api.sheety.co/bb7b4db22c7482feb06a54c51f8e5bf2/flightDeals/users'
 
 
 class DataManager:
     # This class is responsible for talking to the Google Sheet.
     def __init__(self):
         self.sheet_data_url = SHEETY_PRICES_ENDPOINT
+        self.sheety_users_endpoint = SHEETY_USERS_ENDPOINT
         self._authorization = os.getenv('Authorization')
         self.headers = {
             "Authorization": self._authorization
         }
-        self.destination_data = {}
+        self.destination_data = None
+        self.customer_data = None
 
     def get_destination_data(self):
         try:
@@ -47,8 +50,14 @@ class DataManager:
         except requests.exceptions.RequestException as e:
             print(f"Error updating row {row_id}: {e}")
 
+    def get_customer_emails(self):
+        try:
+            response = requests.get(
+                self.sheety_users_endpoint, headers=self.headers)
+            response.raise_for_status()
+            data = response.json()
 
-if __name__ == "__main__":
-    dm = DataManager()
-    dm.get_destination_data()
-    print(dm.destination_data)
+            self.customer_data = data.get("users")
+            return self.customer_data
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching data: {e}")

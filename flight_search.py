@@ -93,38 +93,3 @@ class FlightSearch:
             return None
 
 
-if __name__ == "__main__":
-    from pprint import pprint
-    from flight_data import FlightData
-    import json
-
-    # search = FlightSearch()
-    # flight_data = FlightData()
-    # all_flights = search.get_all_flights(
-    #     origin_loc_code="LON",
-    #     destination_loc_code="PAR",
-    #     departure_date="2024-10-16",
-    #     return_date="2024-10-22",
-    #     non_stop="true"
-    # )
-
-    # flight_data.find_cheapest_flight(all_flights)
-
-    # Write the fetched flights to a JSON file
-    # with open('all_flights_data_ns.json', 'w') as f:
-    #     json.dump(all_flights, f, indent=4)
-
-    with open("all_flights_data.json", "r") as f:
-        flight_data = json.load(f)
-
-    # write the logic to find direct and indirect flights
-
-    fdata_itenary = flight_data.get("data")[0].get(
-        "itineraries")[0].get("segments")
-    # if no of segments > 1 then the flight has stopovers
-    pprint(fdata_itenary)
-    print("segments: ", len(fdata_itenary))
-
-    # London to paris
-    # Now you can access flight_data, which is a Python dictionary or list
-    # print(flight_data)

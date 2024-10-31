@@ -39,8 +39,3 @@ The script retrieves the lowest flight prices and sends notifications if a price
 
 - Email (via the send_email function)
 - Telegram (via the send_telegram_message function)
-
-## Customization
-
-- Adjust the number of days to check prices by modifying MONTHS = 6.
-- Modify how the IATA codes and prices are stored and updated via the DataManager class.
